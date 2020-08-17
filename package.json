@@ -1,0 +1,23 @@
+{
+  "name": "@linkurious/github-client",
+  "version": "1.0.0",
+  "description": "Github API client for releasing process",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/*.test.js",
+    "lint": "eslint --fix --ext .js ."
+  },
+  "author": "Linkurious SAS",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "eslint": "^7.7.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-mocha": "^8.0.0",
+    "mocha": "^8.1.1",
+    "prettier": "^2.0.5"
+  }
+}
