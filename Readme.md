@@ -5,7 +5,7 @@ For releases etc.
 ## Install
 
 ```
-npm i --save-dev @linkurious/github-client
+npm i --save-dev linkurious/github-agent
 ```
 
 ## API
