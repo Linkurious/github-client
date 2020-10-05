@@ -76,6 +76,21 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
     });
   }
 
+
+  /**
+   * Creates and pushes a file into the branch
+   * @param {Object} params
+   * @param {string} params.content File content
+   * @param {string} params.path Relative file path in the repo
+   * @param {string} params.message Commit message
+   * @param {string} params.branch Branch to commit
+   */
+  updateFile({ content, path, message, branch }) {
+    return this.get(`contents/${path}`).then(({ body }) => {
+      return this.createFile({ content, path, message, branch, sha: body.sha });
+    });
+  }
+
   /**
    * Creates a tag at the HEAD of the given branch
    * @param {Object} params
