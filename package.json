@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/github-client",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Github API client for releasing process",
   "main": "index.js",
   "scripts": {
