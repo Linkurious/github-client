@@ -66,14 +66,14 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    * @param {string} [params.sha] Sha if the file exists
    */
   createFile({ content, path, message, branch, sha }) {
-    this._log(`Creating ${path}...`);
+    this._log(`${sha ? "Updating" : "Creating"} ${path}...`);
     return this.put(`contents/${path}`, {
       message,
       branch,
       content: new Buffer(content).toString("base64"),
       sha
     }).then(({ code, body }) => {
-      if (code !== 201) return Promise.reject(body);
+      if (code !== 201 && code !== 200) return Promise.reject(body);
       return body;
     });
   }
