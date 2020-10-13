@@ -36,7 +36,6 @@ describe('Github client', () => {
   it('should be able to update a file', () => {
     const key = getEnvVariable('API_KEY');
     console.log(key);
-    console.log(key);
   });
 });
 
