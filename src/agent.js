@@ -54,7 +54,7 @@ module.exports = class GitHubAgent {
    * @param {*} body
    */
   req(method, url, query, body) {
-    var options = {
+    const options = {
       url: this.repoUrl(url),
       method,
       query,

@@ -1,30 +1,42 @@
 
-const Client = require("../");
-const { assert } = require("chai");
+const Client = require('../');
+const { assert } = require('chai');
+const { execSync } = require('child_process');
 
-const owner = "Linkurious";
-const repository = "github-client";
-const apiKey = "apiKey";
+function getEnvVariable(variable) {
+  return execSync(`echo $${variable}`).toString();
+}
 
-describe("Github client", function () {
+const owner = 'Linkurious';
+const repository = 'github-client';
+const apiKey = 'apiKey';
 
-  it("instance", function () {
+describe('Github client', () => {
+
+  it('instance', () => {
     const client = new Client({ repository, owner, apiKey });
 
     assert.equal(client.ownerName, owner);
     assert.equal(client.repoName, repository);
     assert.equal(client.apiKey, apiKey);
 
-    assert.equal(client.host, "api.github.com");
+    assert.equal(client.host, 'api.github.com');
     assert.equal(client.port, 443);
   });
 
-  it("repo url", function () {
+  it('repo url', () => {
     const client = new Client({ repository, owner, apiKey });
 
     assert.equal(
-      client.repoUrl("suffix"),
-      "https://api.github.com/repos/Linkurious/github-client/suffix"
+      client.repoUrl('suffix'),
+      'https://api.github.com/repos/Linkurious/github-client/suffix'
     );
   });
+
+  it('should be able to update a file', () => {
+    const key = getEnvVariable('API_KEY');
+    console.log(key);
+  });
 });
+
+
