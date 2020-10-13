@@ -4,7 +4,7 @@
   "description": "Github API client for releasing process",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/*.test.js",
+    "test:unit": "mocha test/*.test.js",
     "lint": "eslint --fix --ext .js ."
   },
   "author": "Linkurious SAS",
