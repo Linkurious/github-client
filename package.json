@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/github-client",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Github API client for releasing process",
   "main": "index.js",
   "scripts": {
@@ -11,10 +11,10 @@
   "author": "Linkurious SAS",
   "license": "ISC",
   "dependencies": {
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "@octokit/core": "^3.1.2"
   },
   "devDependencies": {
-    "@octokit/core": "^3.1.2",
     "chai": "^4.2.0",
     "cross-env": "^7.0.2",
     "eslint": "^7.7.0",

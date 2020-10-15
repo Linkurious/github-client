@@ -24,6 +24,14 @@ const client = new Client({
 
 Creates and pushes a file into the branch
 
+* **`.updateFile({ content:string, path:string, message:string, branch:string }): Promise`**
+
+Updates and pushes a file into the branch
+
+* **`.removeFile({ content:string, path:string, message:string, branch:string }): Promise`**
+
+Removes file from the branch
+
 * **`.tagHead({ tag, message = tag, branch }): Promise`**
 
 Creates a tag at the HEAD of the given branch
