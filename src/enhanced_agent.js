@@ -1,8 +1,9 @@
-const fs = require("fs");
-const request = require("request");
-const { exec } = require("child_process");
+const fs = require('fs');
+const request = require('request');
+const { exec } = require('child_process');
 
-const GitHubAgent = require("./agent");
+const GitHubAgent = require('./agent');
+const { Octokit } = require('@octokit/core');
 
 module.exports = class EnhancedGitHubAgent extends GitHubAgent {
 
@@ -17,6 +18,7 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    */
   constructor({ repository, apiKey, owner, host, port, logs = false }) {
     super({ owner, repository, apiKey, host, port });
+    this._octokit = new Octokit({ auth: apiKey });
     this._logsEnabled = logs;
   }
 
@@ -26,12 +28,12 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
   _createBranch(name) {
     this._log(`Creating branch "${name}"...`);
 
-    return this.get("git/refs/heads/master")
+    return this.get('git/refs/heads/master')
       .then(({ body }) => {
         return body.object.sha;
       })
       .then(sha => {
-        return this.post("git/refs", {
+        return this.post('git/refs', {
           ref: `refs/heads/${name}`,
           sha: sha
         });
@@ -66,16 +68,41 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    * @param {string} [params.sha] Sha if the file exists
    */
   createFile({ content, path, message, branch, sha }) {
-    this._log(`${sha ? "Updating" : "Creating"} ${path}...`);
-    return this.put(`contents/${path}`, {
-      message,
-      branch,
-      content: new Buffer(content).toString("base64"),
-      sha
-    }).then(({ code, body }) => {
-      if (code !== 201 && code !== 200) return Promise.reject(body);
-      return body;
+    this._log(`${sha ? 'Updating' : 'Creating'} ${path}...`);
+
+    return this._octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
+      owner: this.ownerName,
+      repo: this.repoName,
+      path, message, branch, sha,
+      content: Buffer.from(content).toString('base64')
+    }).then(({ status, data }) => {
+      if (status !== 201 && status !== 200) return Promise.reject(data);
+      return data;
     });
+  }
+
+
+  /**
+   * Removes the file from repo
+   * @param {Object} params
+   * @param {string} params.path Relative file path in the repo
+   * @param {string} params.message Commit message
+   * @param {string} params.branch Branch to commit
+   */
+  removeFile({ path, message = `Deleted ${path}`, branch }) {
+    return this.get(`contents/${path}`, { ref: branch })
+      .then(({ body }) => this._octokit.request(
+        'DELETE /repos/{owner}/{repo}/contents/{path}',
+        {
+          owner: this.ownerName,
+          repo: this.repoName,
+          path, message, branch,
+          sha: body.sha
+        }))
+      .then(({ status, data }) => {
+        if (status !== 200) return Promise.reject(data);
+        return data;
+      });
   }
 
 
@@ -88,9 +115,8 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    * @param {string} params.branch Branch to commit
    */
   updateFile({ content, path, message, branch }) {
-    return this.get(`contents/${path}`).then(({ body }) => {
-      return this.createFile({ content, path, message, branch, sha: body.sha });
-    });
+    return this.get(`contents/${path}`, { ref: branch }).then(({ body }) =>
+      this.createFile({ content, path, message, branch, sha: body.sha }));
   }
 
   /**
@@ -106,23 +132,23 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
     return this.get(`git/refs/heads/${branch}`)
       .then(({ code, body }) => {
         if (code === 404) return Promise.reject(body);
-        this._log("Retrieving last commit...");
+        this._log('Retrieving last commit...');
         return this.get(body.object.url);
       })
       .then(({ body }) => {
         const { sha } = body;
         this._log(`Tagging commit ${sha} on ${branch} as ${tag}`);
-        return this.post("git/tags", {
+        return this.post('git/tags', {
           tag,
           message,
           object: sha,
-          type: "commit"
+          type: 'commit'
         });
       })
       .then(({ code, body }) => {
         if (code !== 201) return Promise.reject(body);
-        this._log("Linking tag object and commit...");
-        return this.post("git/refs", {
+        this._log('Linking tag object and commit...');
+        return this.post('git/refs', {
           ref: `refs/tags/${tag}`,
           sha: body.sha
         });
@@ -141,7 +167,7 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
   createBlobs(files) {
     return Promise.all(
       files.map(({ path, content, encoding }) => {
-        return this.post("git/blobs", { content, encoding }).then(
+        return this.post('git/blobs', { content, encoding }).then(
           ({ body }) => ({ path, sha: body.sha })
         );
       })
@@ -156,13 +182,13 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    * @param {Array<Object>} params.files Files to push
    * @returns Promise<Object>
    */
-  pushFiles({ branch = "master", message = "Automated commit.", files = [] }) {
+  pushFiles({ branch = 'master', message = 'Automated commit.', files = [] }) {
     const fileTree = files.map(({ path, content, sha }) => ({
       path,
       content,
       sha,
-      mode: "100644",
-      type: "blob"
+      mode: '100644',
+      type: 'blob'
     }));
 
     this._log(`Checking branch "${branch}"...`);
@@ -172,7 +198,7 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
         return { code, body };
       })
       .then(result => {
-        this._log("Retrieving last commit...");
+        this._log('Retrieving last commit...');
         return this.get(result.body.object.url);
       })
       .then(result => {
@@ -180,9 +206,9 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
         const treeSha = commit.tree.sha;
         const commitSha = commit.sha;
 
-        this._log("Creating new tree...");
+        this._log('Creating new tree...');
 
-        const tree = this.post("git/trees", {
+        const tree = this.post('git/trees', {
           base_tree: treeSha,
           tree: fileTree
         });
@@ -192,16 +218,16 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
       .then(([commitSha, result]) => {
         if (result.code !== 201) return Promise.reject(result.body);
         const tree = result.body;
-        this._log("Committing tree...", tree);
+        this._log('Committing tree...', tree);
 
-        return this.post("git/commits", {
+        return this.post('git/commits', {
           message: message,
           tree: tree.sha,
           parents: [commitSha]
         });
       })
       .then(({ body }) => {
-        this._log("Pushing...", body);
+        this._log('Pushing...', body);
 
         return this.patch(`git/refs/heads/${branch}`, {
           sha: body.sha,
@@ -209,7 +235,7 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
         });
       })
       .then(e => {
-        this._log("Done!", e);
+        this._log('Done!', e);
       });
   }
 
@@ -223,7 +249,7 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    * @param {Object} params.body
    */
   uploadRelease({ tag_name, name, body, prerelease, zipName, zipPath }) {
-    return this.post("releases", { tag_name, name, body, prerelease }).then(
+    return this.post('releases', { tag_name, name, body, prerelease }).then(
       ({ body, code }) => {
         if (code === 422) {
           throw new Error(`release "${tag_name}" already exists`);
@@ -233,18 +259,18 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
         const stats = fs.statSync(zipPath);
         const options = {
           port: this.port,
-          url: release["upload_url"].replace("{?name,label}", ""),
+          url: release['upload_url'].replace('{?name,label}', ''),
           qs: { name: zipName },
 
           auth: {
-            pass: "x-oauth-basic",
+            pass: 'x-oauth-basic',
             user: this.apiKey
           },
           headers: {
-            "User-Agent": `${this.ownerName}-Release-Agent`,
-            Accept: "application/vnd.github.v3+json",
-            "Content-Type": "application/zip",
-            "Content-Length": stats.size
+            'User-Agent': `${this.ownerName}-Release-Agent`,
+            Accept: 'application/vnd.github.v3+json',
+            'Content-Type': 'application/zip',
+            'Content-Length': stats.size
           }
         };
 
@@ -271,15 +297,15 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    * List milestones
    */
   getMilestones({ state } = {}) {
-    this._log("Retrieving milestones...");
-    return this.get("milestones", { state }).then(({ body }) => body);
+    this._log('Retrieving milestones...');
+    return this.get('milestones', { state }).then(({ body }) => body);
   }
 
   /**
    * Closes the milestone by number
    */
   closeMilestone(number) {
-    return this.patch(`milestones/${number}`, { state: "closed" }).then(
+    return this.patch(`milestones/${number}`, { state: 'closed' }).then(
       ({ code, body }) => {
         if (code !== 200) return Promise.reject(body);
         else return body;
@@ -295,19 +321,19 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    * @return Promise<Array<Object>>
    */
   getIssues({ state, milestone } = {}) {
-    this._log("Retrieving issues...");
-    return this.get("issues", { state, milestone }).then(({ body }) => body);
+    this._log('Retrieving issues...');
+    return this.get('issues', { state, milestone }).then(({ body }) => body);
   }
 
   getReleases() {
-    return this.get("releases").then(({ body }) => body);
+    return this.get('releases').then(({ body }) => body);
   }
 
   getCurrentBranch() {
     // for the CI
     if (process.env.GIT_BRANCH) return Promise.resolve(process.env.GIT_BRANCH);
     return new Promise((resolve, reject) => {
-      exec("git rev-parse --abbrev-ref HEAD", (err, res) => {
+      exec('git rev-parse --abbrev-ref HEAD', (err, res) => {
         if (err) return reject(err);
         resolve(res.trim());
       });

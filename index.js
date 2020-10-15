@@ -1,3 +1,3 @@
-const Client = require("./src/enhanced_agent");
+const Client = require('./src/enhanced_agent');
 
 module.exports = Client;
