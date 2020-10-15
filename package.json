@@ -4,7 +4,9 @@
   "description": "Github API client for releasing process",
   "main": "index.js",
   "scripts": {
-    "test:unit": "echo 'Skip'"
+    "test": "mocha test/**/*.test.js",
+    "test:unit": "nyc --reporter=text-summary --reporter=cobertura --report-dir=reports mocha --reporter mocha-multi-reporters --reporter-options configFile=.test-reporters.json  test/**/**.test.js",
+    "lint": "eslint --fix --ext .js ."
   },
   "author": "Linkurious SAS",
   "license": "ISC",
