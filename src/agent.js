@@ -1,4 +1,4 @@
-const request = require("request");
+const request = require('request');
 
 /**
  * @typedef {"GET"|"POST"|"HEAD"|"PUT"|"DELETE"} Method
@@ -14,15 +14,15 @@ module.exports = class GitHubAgent {
    * @param {string} [options.host] API host, defaults to 'api.github.com'
    * @param {number} [options.port] API endpoints port, defaults to 443
    */
-  constructor({ owner, repository, apiKey, host = "api.github.com", port = 443 }) {
-    if (!owner || typeof owner !== "string") {
-      throw new Error("Missing 'owner' field");
+  constructor({ owner, repository, apiKey, host = 'api.github.com', port = 443 }) {
+    if (!owner || typeof owner !== 'string') {
+      throw new Error('Missing \'owner\' field');
     }
-    if (!repository || typeof repository !== "string") {
-      throw new Error("Missing 'repository' field");
+    if (!repository || typeof repository !== 'string') {
+      throw new Error('Missing \'repository\' field');
     }
-    if (!apiKey || typeof apiKey !== "string") {
-      throw new Error("Missing 'apiKey' field");
+    if (!apiKey || typeof apiKey !== 'string') {
+      throw new Error('Missing \'apiKey\' field');
     }
 
     this.ownerName = owner;
@@ -60,7 +60,6 @@ module.exports = class GitHubAgent {
       query,
       body
     };
-
     return this._request(options);
   }
 
@@ -70,19 +69,19 @@ module.exports = class GitHubAgent {
    * @param {*} parameters
    */
   get(url, parameters) {
-    return this.req("get", url, parameters);
+    return this.req('get', url, parameters);
   }
 
   post(url, parameters) {
-    return this.req("post", url, undefined, parameters);
+    return this.req('post', url, undefined, parameters);
   }
 
   put(url, parameters) {
-    return this.req("put", url, undefined, parameters);
+    return this.req('put', url, undefined, parameters);
   }
 
   patch(url, parameters) {
-    return this.req("patch", url, undefined, parameters);
+    return this.req('patch', url, undefined, parameters);
   }
 
   /**
@@ -102,17 +101,14 @@ module.exports = class GitHubAgent {
         qs: options.query,
         json: true,
         headers: {
-          "User-Agent": "Github-Agent",
-          Accept: "application/vnd.github.v3+json"
+          'User-Agent': 'Github-Agent',
+          Accept: 'application/vnd.github.v3+json'
         }
       };
-      if (this.apiKey) {
-        requestOptions.auth = {
-          pass: "x-oauth-basic",
-          user: this.apiKey
-        };
-      }
-
+      requestOptions.auth = {
+        pass: 'x-oauth-basic',
+        user: this.apiKey
+      };
       this._getPage(requestOptions, resolve, reject);
     });
   }
@@ -130,7 +126,7 @@ module.exports = class GitHubAgent {
         res.headers.link && res.headers.link.match(/^<([^>]+)>; rel="next"/);
 
       if (code >= 500 && code <= 599) {
-        throw new Error("HTTP code 500 returned");
+        throw new Error('HTTP code 500 returned');
       }
 
       if (url) {
@@ -155,7 +151,6 @@ module.exports = class GitHubAgent {
             body = bodyAcc;
           }
         }
-
         resolve({ body, code });
       }
     });

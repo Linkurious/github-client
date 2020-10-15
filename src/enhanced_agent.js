@@ -3,6 +3,7 @@ const request = require('request');
 const { exec } = require('child_process');
 
 const GitHubAgent = require('./agent');
+const { Octokit } = require('@octokit/core');
 
 module.exports = class EnhancedGitHubAgent extends GitHubAgent {
 
@@ -17,6 +18,7 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    */
   constructor({ repository, apiKey, owner, host, port, logs = false }) {
     super({ owner, repository, apiKey, host, port });
+    this._octokit = new Octokit({ auth: apiKey });
     this._logsEnabled = logs;
   }
 
@@ -67,15 +69,40 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    */
   createFile({ content, path, message, branch, sha }) {
     this._log(`${sha ? 'Updating' : 'Creating'} ${path}...`);
-    return this.put(`contents/${path}`, {
-      message,
-      branch,
-      content: new Buffer(content).toString('base64'),
-      sha
-    }).then(({ code, body }) => {
-      if (code !== 201 && code !== 200) return Promise.reject(body);
-      return body;
+
+    return this._octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
+      owner: this.ownerName,
+      repo: this.repoName,
+      path, message, branch, sha,
+      content: Buffer.from(content).toString('base64')
+    }).then(({ status, data }) => {
+      if (status !== 201 && status !== 200) return Promise.reject(data);
+      return data;
     });
+  }
+
+
+  /**
+   * Removes the file from repo
+   * @param {Object} params
+   * @param {string} params.path Relative file path in the repo
+   * @param {string} params.message Commit message
+   * @param {string} params.branch Branch to commit
+   */
+  removeFile({ path, message = `Deleted ${path}`, branch }) {
+    return this.get(`contents/${path}`, { ref: branch })
+      .then(({ body }) => this._octokit.request(
+        'DELETE /repos/{owner}/{repo}/contents/{path}',
+        {
+          owner: this.ownerName,
+          repo: this.repoName,
+          path, message, branch,
+          sha: body.sha
+        }))
+      .then(({ status, data }) => {
+        if (status !== 200) return Promise.reject(data);
+        return data;
+      });
   }
 
 
@@ -88,9 +115,8 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    * @param {string} params.branch Branch to commit
    */
   updateFile({ content, path, message, branch }) {
-    return this.get(`contents/${path}`).then(({ body }) => {
-      return this.createFile({ content, path, message, branch, sha: body.sha });
-    });
+    return this.get(`contents/${path}`, { ref: branch }).then(({ body }) =>
+      this.createFile({ content, path, message, branch, sha: body.sha }));
   }
 
   /**
