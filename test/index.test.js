@@ -11,8 +11,7 @@ const apiKey = 'apiKey';
 const getClient = () => new Client({
   repository: 'github-agent',
   owner: 'Linkurious',
-  apiKey: API_KEY,
-  logs: true
+  apiKey: API_KEY
 });
 
 describe('Github client', () => {
