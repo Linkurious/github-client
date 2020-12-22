@@ -1,6 +1,8 @@
 
 const Client = require('../');
 const { assert } = require('chai');
+const path = require('path');
+const { version } = require('../package.json');
 
 const API_KEY = 'a0b7f08e6f1853c9d4cb1f6f3006329d489f9f67';
 
@@ -35,8 +37,6 @@ describe('Github client', () => {
       'https://api.github.com/repos/Linkurious/github-client/suffix'
     );
   });
-
-
 
   it('should be able to create a file', () => {
     const client = getClient();
@@ -78,6 +78,31 @@ describe('Github client', () => {
       assert.equal(res.commit.message, message);
     });
   });
+
+  it('get release', () => {
+    const client = getClient();
+    return client.getRelease('v1.1.0')
+      .then(release => assert.equal(release.id, 32628987));
+  });
+
+  it('should be able to upload a release', () => {
+    const client = getClient();
+    const name = `GH agent v${version}`;
+    const body = '### Markdown';
+    return client.uploadRelease({
+      tag_name: 'v3.0.0-test',
+      name, body,
+      zipPath: path.join(process.cwd(), 'test', 'test.tgz'),
+      zipName: 'release-asset.tgz',
+      contentType: 'application/gzip'
+    }).then((release) => {
+      assert.equal(release.name, name);
+      assert.equal(release.body, body);
+      assert.equal(release.assets.length, 1);
+      assert.equal(release.assets[0].name, 'release-asset.tgz');
+    })
+      .then(() => client.deleteRelease('v3.0.0-test'));
+  })
 });
 
 

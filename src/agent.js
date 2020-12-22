@@ -84,6 +84,10 @@ module.exports = class GitHubAgent {
     return this.req('patch', url, undefined, parameters);
   }
 
+  delete(url, parameters) {
+    return this.req('delete', url, undefined, parameters);
+  }
+
   /**
    * @param {object} options
    * @param {string} [options.url] expected response status

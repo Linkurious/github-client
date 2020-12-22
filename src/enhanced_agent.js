@@ -246,13 +246,24 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
    * @param {string} params.name Name
    * @param {boolean} params.prerelease Is it a pre-release
    * @param {string} params.zipPath Zipfile to upload
+   * @param {string} [params.contentType='application/zip'] Artefact MIME type
    * @param {Object} params.body
    */
-  uploadRelease({ tag_name, name, body, prerelease, zipName, zipPath }) {
-    return this.post('releases', { tag_name, name, body, prerelease }).then(
+  uploadRelease({
+    tag_name, name, body, prerelease,
+    zipName, zipPath,
+    contentType = 'application/zip',
+    useExistingTag = false
+  }) {
+    return this.post('releases', {
+      tag_name,
+      name,
+      body,
+      prerelease
+    }).then(
       ({ body, code }) => {
         if (code === 422) {
-          throw new Error(`release "${tag_name}" already exists`);
+          throw new Error(`Release "${tag_name}" already exists`);
         }
 
         const release = body;
@@ -269,17 +280,16 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
           headers: {
             'User-Agent': `${this.ownerName}-Release-Agent`,
             Accept: 'application/vnd.github.v3+json',
-            'Content-Type': 'application/zip',
+            'Content-Type': contentType,
             'Content-Length': stats.size
           }
         };
 
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
           fs.createReadStream(zipPath).pipe(
             request.post(options, (err, res) => {
-              if (err) {
-                throw err;
-              } else if (res.statusCode !== 201) {
+              if (err) return reject(err);
+              if (res.statusCode !== 201) {
                 throw new Error(
                   `Upload failed with HTTP code ${res.statusCode}`
                 );
@@ -290,7 +300,21 @@ module.exports = class EnhancedGitHubAgent extends GitHubAgent {
           );
         });
       }
-    );
+    ).then(() => this.getRelease(tag_name));
+  }
+
+  getRelease(tag) {
+    return this
+      .get(`releases/tags/${tag}`)
+      .then(res => res.body);
+  }
+
+  /**
+   * @param {string} tag Tag semver
+   */
+  deleteRelease(tag) {
+    return this.getRelease(tag)
+      .then(release => this.delete(`releases/${release.id}`));
   }
 
   /**
