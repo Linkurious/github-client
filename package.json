@@ -1,0 +1,32 @@
+{
+  "name": "@linkurious/github-client",
+  "version": "1.1.3",
+  "description": "Github API client for releasing process",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/**/*.test.js --timeout 3000",
+    "test:unit": "nyc --reporter=text-summary --reporter=cobertura --report-dir=reports mocha --timeout 3000 --reporter mocha-multi-reporters --reporter-options configFile=.test-reporters.json  test/**/**.test.js",
+    "lint": "eslint --fix --ext .js .",
+    "postversion": "sync_versions"
+  },
+  "author": "Linkurious SAS",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.88.2",
+    "@octokit/core": "^3.1.2"
+  },
+  "devDependencies": {
+    "@linkurious/code-tools": "0.0.2",
+    "chai": "^4.2.0",
+    "cross-env": "^7.0.2",
+    "eslint": "^7.7.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-mocha": "^8.0.0",
+    "mocha": "^8.1.1",
+    "mocha-junit-reporter": "^2.0.0",
+    "mocha-multi-reporters": "^1.1.7",
+    "nock": "^13.0.4",
+    "nyc": "^15.1.0",
+    "prettier": "^2.0.5"
+  }
+}
