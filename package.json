@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha test/**/*.test.js --timeout 3000",
+    "changelog": "npm run test",
     "test:unit": "nyc --reporter=text-summary --reporter=cobertura --report-dir=reports mocha --timeout 3000 --reporter mocha-multi-reporters --reporter-options configFile=.test-reporters.json  test/**/**.test.js",
     "lint": "eslint --fix --ext .js .",
     "postversion": "sync_versions"
