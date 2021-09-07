@@ -10,8 +10,8 @@ const owner = 'Linkurious';
 const repository = 'github-client';
 const apiKey = 'apiKey';
 
-const getClient = () => new Client({
-  repository: 'github-agent',
+const getClient = ({ repository } = {}) => new Client({
+  repository: repository || 'github-agent',
   owner: 'Linkurious',
   apiKey: API_KEY
 });
@@ -43,7 +43,7 @@ describe('Github client', () => {
 describe('API calls', () => {
 
   it.only('should be able to get the milestones', () => {
-    const client = getClient();
+    const client = getClient({ repository: 'ogma' });
     return client.getMilestones().then(milestones => {
       console.log(milestones);
     });
