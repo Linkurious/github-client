@@ -12,21 +12,18 @@
   "author": "Linkurious SAS",
   "license": "ISC",
   "dependencies": {
-    "request": "^2.88.2",
-    "@octokit/core": "^3.1.2"
+    "@octokit/core": "3.1.2",
+    "request": "2.88.2"
   },
   "devDependencies": {
     "@linkurious/code-tools": "0.0.2",
-    "chai": "^4.2.0",
-    "cross-env": "^7.0.2",
-    "eslint": "^7.7.0",
-    "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-mocha": "^8.0.0",
-    "mocha": "^8.1.1",
-    "mocha-junit-reporter": "^2.0.0",
-    "mocha-multi-reporters": "^1.1.7",
-    "nock": "^13.0.4",
-    "nyc": "^15.1.0",
-    "prettier": "^2.0.5"
+    "chai": "6.0.1",
+    "eslint": "7.7.0",
+    "eslint-config-prettier": "10.1.8",
+    "mocha": "11.7.2",
+    "mocha-junit-reporter": "2.2.1",
+    "mocha-multi-reporters": "1.5.1",
+    "nyc": "17.1.0",
+    "prettier": "3.6.2"
   }
 }
