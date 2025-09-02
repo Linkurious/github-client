@@ -5,4 +5,5 @@ nodeJob {
   projectName = "linkurious/github-agent"
   podTemplateNames = ['jnlp-agent-node']
   runBenchTests = false
+  runDependencyVersionCheck = false
 }
