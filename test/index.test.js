@@ -4,14 +4,14 @@ const { assert } = require('chai');
 const path = require('path');
 const { version } = require('../package.json');
 
-const API_KEY = 'API_KEY';
+const API_KEY = process.env.GITHUB_API_TOKEN;
 
 const owner = 'Linkurious';
 const repository = 'github-client';
 const apiKey = 'apiKey';
 
-const getClient = () => new Client({
-  repository: 'github-agent',
+const getClient = ({ repository } = {}) => new Client({
+  repository: repository || 'github-agent',
   owner: 'Linkurious',
   apiKey: API_KEY
 });
@@ -40,8 +40,17 @@ describe('Github client', () => {
 
 });
 
-describe.skip('API calls', () => {
-  it('should be able to create a file', () => {
+describe('API calls', () => {
+
+  it.only('should be able to get the milestones', () => {
+    const client = getClient({ repository: 'ogma' });
+    return client.getMilestones().then(milestones => {
+      console.log(milestones);
+    });
+  });
+
+
+  it.skip('should be able to create a file', () => {
     const client = getClient();
     const fileName = 'file.txt';
     return client.createFile({
@@ -55,7 +64,7 @@ describe.skip('API calls', () => {
     });
   });
 
-  it('should be able to update a file', () => {
+  it.skip('should be able to update a file', () => {
     const client = getClient();
     const fileName = 'file.txt';
     const message = `[test] Updated ${fileName}`;
@@ -69,7 +78,7 @@ describe.skip('API calls', () => {
     });
   });
 
-  it('should be able to remove a file', () => {
+  it.skip('should be able to remove a file', () => {
     const client = getClient();
     const fileName = 'file.txt';
     const message = `[test] Deleted ${fileName}`;
@@ -88,7 +97,7 @@ describe.skip('API calls', () => {
       .then(release => assert.equal(release.id, 32628987));
   });
 
-  it('should be able to upload a release', () => {
+  it.skip('should be able to upload a release', () => {
     const client = getClient();
     const name = `GH agent v${version}`;
     const body = '### Markdown';
